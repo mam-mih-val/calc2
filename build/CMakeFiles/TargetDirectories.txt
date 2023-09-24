@@ -1,0 +1,5 @@
+/home/mikhail/calc2/build/CMakeFiles/rebuild_cache.dir
+/home/mikhail/calc2/build/CMakeFiles/calculate.dir
+/home/mikhail/calc2/build/CMakeFiles/edit_cache.dir
+/home/mikhail/calc2/build/CMakeFiles/Calculator.dir
+/home/mikhail/calc2/build/CMakeFiles/G__Calculator.dir

@@ -1,0 +1,16 @@
+#include <iostream>
+
+#include <TROOT.h>
+#include <TSystem.h>
+
+#cmakedefine CALC_INCLUDE_PATH "@CALC_INCLUDE_PATH@"
+#cmakedefine QnTools_LIB_PATH "@QnTools_LIB_PATH@"
+
+
+int main(int n_args, char** args) {
+  if( n_args < 2 )
+    throw std::runtime_error( "No arguments provided" );
+  gInterpreter->Load(QnTools_LIB_PATH);
+  gInterpreter->AddIncludePath(CALC_INCLUDE_PATH);
+  gROOT->Macro(args[1]);
+}

@@ -1,0 +1,14 @@
+C:\Windows\system32\wsl.exe --distribution Ubuntu --exec /usr/bin/zsh -c "export ROOT_DIR=/home/mikhail/root-6.24.06/install/cmake && export CMAKE_COLOR_DIAGNOSTICS=ON && export CLION_IDE=TRUE && export BOOST_ROOT=/home/mikhail/boost_1_80_0 && export QnTools_DIR=/home/mikhail/QnTools/install/lib/cmake/QnTools && export JETBRAINS_IDE=TRUE && cd /mnt/c/Users/Misha/CLionProjects/calc2/cmake-build-debug && /usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G 'CodeBlocks - Unix Makefiles' -S /mnt/c/Users/Misha/CLionProjects/calc2 -B /mnt/c/Users/Misha/CLionProjects/calc2/cmake-build-debug"
+CMake Warning at /usr/share/cmake-3.16/Modules/FindBoost.cmake:1161 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /usr/share/cmake-3.16/Modules/FindBoost.cmake:1283 (_Boost_COMPONENT_DEPENDENCIES)
+  /usr/share/cmake-3.16/Modules/FindBoost.cmake:1921 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:7 (find_package)
+
+
+-- 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /mnt/c/Users/Misha/CLionProjects/calc2/cmake-build-debug
