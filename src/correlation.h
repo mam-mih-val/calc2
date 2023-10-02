@@ -182,40 +182,11 @@ public:
     return result;
   }
 
-  friend std::optional< Correlation<N> > MakeCorrelation( 
-    TFile* file,
-    const std::string& directory,
-    const std::array<std::string, 2>& vector_names,
-    const std::array<std::string, N>& component_names ) noexcept {
-    if( !file ){
-      std::cerr << "Warning: Input file is nullptr" << "\n";
-      return {};
-    }
-    std::array<Qn::DataContainerStatCalculate, N> components{};
-    size_t idx{};
-    for (const auto &component : component_names){
-      std::string name{};
-      name.append(directory).append("/").append(vector_names[0]).append(".").append(vector_names[1]).append(".").append(component);
-      std::string alt_name{};
-      alt_name.append(directory).append("/").append(vector_names[1]).append(".").append(vector_names[0]).append(".").append(component);
-      auto component_obj = Correlation::ReadFromFile( file, name );
-      if ( !component_obj ) {  
-        component_obj = Correlation::ReadFromFile( file, alt_name );
-      }
-      if( !component_obj ){
-        std::cerr << "Warning: There is no object in the file with the name " << name << "\n";
-        return {};
-      }
-      components[idx] = component_obj.value();
-      idx++;
-    }
-    Correlation<N> result{};
-    result.title_ = "";
-    result.component_names_ = component_names;
-    result.vector_names_ = std::vector<std::string>(vector_names.data(), vector_names.data()+2);
-    result.components_ = std::move(components);
-    return std::make_optional( result );
-  }
+  template<size_t M>
+  friend std::optional< Correlation<M> > MakeCorrelation( TFile* file, 
+                                                          const std::string& directory, 
+                                                          const std::array<std::string, 2>& vector_names, 
+                                                          const std::array<std::string, M>& component_names ) noexcept;
   
 private:
   std::string title_;
@@ -237,6 +208,41 @@ private:
 
 };
 
-
+template<size_t M>
+std::optional< Correlation<M> > MakeCorrelation( 
+  TFile* file,
+  const std::string& directory,
+  const std::array<std::string, 2>& vector_names,
+  const std::array<std::string, M>& component_names ) noexcept {
+  if( !file ){
+    std::cerr << "Warning: Input file is nullptr" << "\n";
+    return {};
+  }
+  std::array<Qn::DataContainerStatCalculate, M> components{};
+  size_t idx{};
+  for (const auto &component : component_names){
+    std::string name{};
+    name.append(directory).append("/").append(vector_names[0]).append(".").append(vector_names[1]).append(".").append(component);
+    std::string alt_name{};
+    alt_name.append(directory).append("/").append(vector_names[1]).append(".").append(vector_names[0]).append(".").append(component);
+    auto component_obj = Correlation<M>::ReadFromFile( file, name );
+    if ( !component_obj ) {  
+      component_obj = Correlation<M>::ReadFromFile( file, alt_name );
+    }
+    if( !component_obj ){
+      std::cerr << "Warning: There is no object in the file with the name " << name << "\n";
+      std::cerr << "Disregaring the whole correlation" << "\n";
+      return {};
+    }
+    components[idx] = component_obj.value();
+    idx++;
+  }
+  Correlation<M> result{};
+  result.title_ = "";
+  result.component_names_ = component_names;
+  result.vector_names_ = std::vector<std::string>(vector_names.data(), vector_names.data()+2);
+  result.components_ = std::move(components);
+  return std::make_optional( result );
+}
 
 #endif //CALC2_CORRELATION_H

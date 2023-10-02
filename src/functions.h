@@ -62,8 +62,9 @@ public:
                                                       const std::array<std::string, N>& comp_names) noexcept {
     std::vector<Correlation<N>> result_vector;
     for( const auto& sub : sub_vectors ){
-      auto ep_sub = MakeCorrelation(file, directory, std::array{ep_vector, sub}, comp_names)*2.;
+      auto ep_sub = MakeCorrelation(file, directory, std::array{ep_vector, sub}, comp_names);
       if (!ep_sub) continue;
+      ep_sub.value() = ep_sub.value()*2.;
       auto vec_res_sub = VectorResolutions3S( file, directory, sub, res_vectors, comp_names );
       for( const auto& R1_sub : vec_res_sub ){
         auto res_4sub = ep_sub.value() / R1_sub;
