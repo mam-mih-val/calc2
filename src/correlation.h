@@ -6,6 +6,7 @@
 #define CALC2_CORRELATION_H
 
 #include <array>
+#include <exception>
 #include <optional>
 #include <string>
 #include <numeric>
@@ -18,6 +19,36 @@
 template <size_t N>
 class Correlation {
 public:
+  class input_file_is_nullptr : public std::exception{
+    public:
+    input_file_is_nullptr(const std::string& function) : function_(function) {
+      msg_ = "Correlation::" + function_+ "() " + msg_;
+    }
+    ~input_file_is_nullptr() = default;
+    const char* what() const throw () override {
+      return msg_.c_str();
+    }
+    private:
+    std::string function_;
+    std::string msg_{ "Input file is nullptr" };
+  };
+
+  class no_object_in_file : public std::exception{
+    public:
+    no_object_in_file(const std::string& function, const std::string& obj_name) : function_(function), obj_name_(obj_name) {
+      msg_ = "Correlation::" + function_+ "() " + msg_ + " " + obj_name;
+    }
+    ~no_object_in_file() = default;
+    const char* what() const throw () override {
+      return msg_.c_str();
+    }
+    const std::string& obj_name(){ return obj_name_; }
+    private:
+    std::string function_;
+    std::string obj_name_;
+    std::string msg_{ "No object in a file with name" };
+  };
+
   Correlation() = default;
   Correlation( 
     const std::string& title,
@@ -35,7 +66,7 @@ public:
                vector_names_{ vector_names },
                component_names_{ component_names } {
     if( !file )
-      throw std::runtime_error( std::string( "Error: Input file is nullptr" ) );
+      throw input_file_is_nullptr(__func__);
     int idx{};
     for (const auto &component : component_names) {
       std::string name = directory + "/";
@@ -46,7 +77,7 @@ public:
       else name.pop_back();
       auto component_obj = ReadFromFile( file, name );
       if( !component_obj )
-        throw std::runtime_error( std::string( "There is no object in the file with the name " ) + name );
+        throw no_object_in_file(__func__, name);
       components_[idx] = component_obj.value();
       idx++;
     }
@@ -59,7 +90,7 @@ public:
                component_names_{ component_names } {
 
     if( !file )
-      throw std::runtime_error( std::string( "Error: Input file is nullptr" ) );
+      throw input_file_is_nullptr(__func__);
     int idx{};
     for (const auto &component : component_names){
       std::string name{};
@@ -72,7 +103,7 @@ public:
       if ( !component_obj ) 
         component_obj = ReadFromFile( file, alt_name );
       if( !component_obj )
-        throw std::runtime_error( std::string( "There is no object in the file with the name " ) + name );
+        throw no_object_in_file(__func__, name);
       components_[idx] = component_obj.value();
       idx++;
     }
