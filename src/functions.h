@@ -152,6 +152,16 @@ public:
     }
     return result_vector;
   };
+  
+  template<size_t N>
+  static std::optional< Correlation<N> > CreateCorrelation( 
+                                                         TFile* file,
+                                                         const std::string& directory,
+                                                         const std::array<std::string, 2>& vector_names,
+                                                         const std::array<std::string, N>& component_names ) noexcept {
+    return MakeCorrelation(file, directory, vector_names, component_names);
+  }
+
 //  static Correlation ExtrapolateToFullEvent(const Correlation& half_event_resolution, double order);
 private:
 //  static double ResolutionFunction( double chi, double k, double y );
