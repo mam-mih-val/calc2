@@ -16,9 +16,14 @@
 
 #include <DataContainer.hpp>
 
+
+/// @brief Class for handling the correlations of the components of u and Q-vectors 
+///  and perform the arithmetic operations
+/// @param N is a number of correlations to be bind in single Correlation<N> class
 template <size_t N>
 class Correlation {
 public:
+  /// @brief The exception thrown in a case is input file is not found or cannot be opened
   class input_file_is_nullptr : public std::exception{
     public:
     input_file_is_nullptr(const std::string& function) : function_(function) {
@@ -32,7 +37,7 @@ public:
     std::string function_;
     std::string msg_{ "Input file is nullptr" };
   };
-
+  /// @brief The exception thrown in case if oppened file does not contain the correlation
   class no_object_in_file : public std::exception{
     public:
     no_object_in_file(const std::string& function, const std::string& obj_name) : function_(function), obj_name_(obj_name) {
@@ -48,8 +53,13 @@ public:
     std::string obj_name_;
     std::string msg_{ "No object in a file with name" };
   };
-
+  /// @brief Default constructor
   Correlation() = default;
+  /// @brief Constructor wrapping a number of correlations in a single Correlation object.
+  /// @param title is a name of the correlation. Used when saving the objects to a file
+  /// @param component_names is an array of correlation components names
+  /// @param components is an array of correlations to be bound in a single object
+  /// @param vector_names contains the titles of vectors used to build the correlation
   Correlation( 
     const std::string& title,
     const std::array<std::string, N>& component_names,
@@ -59,6 +69,16 @@ public:
         component_names_{ component_names }, 
         components_{ components }, 
         vector_names_{vector_names} {}
+  /// @brief Constructor initializing the inner structure reading the objects form a file
+  /// @param file is a pointer to a file from which the objects are read
+  /// @param directory is a name of the directory containing the objects
+  /// @param vector_names contains the titles of the vectors used to calculate the correlations.
+  /// @param component_names should contain the components of the correlation
+  /// Correlation names fetched from the file will be formed as follows:
+  /// directory/vector_names[0].vector_names[1]...vector_names[M].component_names[0]
+  /// directory/vector_names[0].vector_names[1]...vector_names[M].component_names[1]
+  /// ...
+  /// directory/vector_names[0].vector_names[1]...vector_names[M].component_names[N-1]
   Correlation( TFile* file,
                const std::string& directory,
                const std::vector<std::string>& vector_names,
@@ -82,6 +102,17 @@ public:
       idx++;
     }
   };
+  /// @brief Same as the constructor initializing the inner structure reading the objects form a file.
+  /// @brief But in cas if the correlation vector_names[0].vector_names[1] is not found it will try to fetch vector_names[1].vector_names[0]
+  /// @param file is a pointer to a file from which the objects are read
+  /// @param directory is a name of the directory containing the objects
+  /// @param vector_names contains the titles of the vectors used to calculate the correlations.
+  /// @param component_names should contain the components of the correlation
+  /// Correlation names fetched from the file will be formed as follows:
+  /// directory/vector_names[0].vector_names[1]...vector_names[M].component_names[0]
+  /// directory/vector_names[0].vector_names[1]...vector_names[M].component_names[1]
+  /// ...
+  /// directory/vector_names[0].vector_names[1]...vector_names[M].component_names[N-1]
   Correlation( TFile* file,
                const std::string& directory,
                const std::array<std::string, 2>& vector_names,
@@ -108,13 +139,19 @@ public:
       idx++;
     }
   };
+  /// @brief Default copy constructor
   Correlation( const Correlation& ) = default;
+  /// @brief Default copy assignment operator
   Correlation& operator=( const Correlation& ) = default;
+  /// @brief Default move constructor
   Correlation( Correlation&& )  noexcept = default;
+  /// @brief Default move assignment operator
   Correlation& operator=( Correlation&& )  noexcept = default;
+  /// @brief Default destructor
   ~Correlation() = default;
   [[nodiscard]] const std::string& Title() const { return title_; }
   void SetTitle( const std::string& title ){ title_ = title; }
+  /// @brief Rebins all the containing correlations along the provided axes 
   void Rebin( const std::vector<Qn::AxisD>& rebin_axes ){
     std::for_each( components_.begin(), components_.end(), [&rebin_axes]( auto& component ){
       for( const auto& axis : rebin_axes ){
@@ -122,11 +159,13 @@ public:
       }
     } );
   }
+  /// @brief Projects all the containing correlations onto the provided axes 
   void Project( const std::vector<std::string>& projection_axes ){
     std::for_each( components_.begin(), components_.end(), [&projection_axes]( auto& component ){
       component = component.Projection( projection_axes );
     } );
   }
+  /// @brief Index access operator. 
   Qn::DataContainerStatCalculate& operator[]( size_t idx ){ return components_.at(idx); }
   [[nodiscard]] constexpr size_t Size() const  { return N; };
   void Save( const std::string& name ) const {
@@ -163,7 +202,7 @@ public:
   friend Correlation<N> operator*(const Correlation<N>& lhs, const std::array<double, N> & tensor) noexcept {
     auto result = Correlation(lhs);
     for( size_t i=0; i<N; ++i ){
-      result.components_[i] = lhs.components_[i] * tensor.at[i];
+      result.components_[i] = lhs.components_[i] * tensor[i];
     }
     return result;
   }
@@ -212,7 +251,7 @@ public:
     }
     return result;
   }
-
+  /// @brief Factory returning the std::optional<Correlation<M>>. Use to avoid handling the exceptions
   template<size_t M>
   friend std::optional< Correlation<M> > MakeCorrelation( TFile* file, 
                                                           const std::string& directory, 
