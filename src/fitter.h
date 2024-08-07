@@ -14,7 +14,14 @@
 
 class Fitter{
 public:
-  Fitter( Correlation<1> corr, std::string fit_axis, std::string slice_axis ) : fit_axis_name_{ std::move(fit_axis) }, slice_axis_name_{ std::move(slice_axis) }, correlation_{corr[0]} {}
+  Fitter( Correlation<1> corr, std::string fit_axis, std::string slice_axis ) : fit_axis_name_{ std::move(fit_axis) }, slice_axis_name_{ std::move(slice_axis) }, correlation_{corr[0]} {
+    assert( correlation_.GetDimension() == 2 );
+    auto axes = correlation_.GetAxes();
+    auto fit_axis_pos = std::find_if( axes.begin(), axes.end(), [this]( const auto& a ){ return a.Name() == fit_axis_name_; } );
+    assert(  fit_axis_pos != axes.end() );
+    auto slice_axis_pos = std::find_if( axes.begin(), axes.end(), [this]( const auto& a ){ return a.Name() == slice_axis_name_; } );
+    assert(  slice_axis_pos != axes.end() );
+  }
   
   Fitter(Qn::DataContainerStatCalculate corr, std::string fit_axis, std::string slice_axis) : fit_axis_name_{ std::move(fit_axis) }, slice_axis_name_{ std::move(slice_axis) }, correlation_{corr} {
     assert( correlation_.GetDimension() == 2 );
