@@ -1,6 +1,7 @@
 #ifndef FLOW_CALCULATOR_SRC_FITTER_HPP_
 #define FLOW_CALCULATOR_SRC_FITTER_HPP_
 
+#include "src/correlation.h"
 #include <Axis.hpp>
 #include <DataContainer.hpp>
 #include <StatCalculate.hpp>
@@ -12,6 +13,7 @@
 #include <numeric>
 
 class Fitter{
+  Fitter( Correlation<1> corr, std::string fit_axis, std::string slice_axis ) : fit_axis_name_{ std::move(fit_axis) }, slice_axis_name_{ std::move(slice_axis) }, correlation_{corr[0]} {}
   Fitter(Qn::DataContainerStatCalculate corr, std::string fit_axis, std::string slice_axis) : fit_axis_name_{ std::move(fit_axis) }, slice_axis_name_{ std::move(slice_axis) }, correlation_{corr} {
     assert( correlation_.GetDimension() == 2 );
     auto axes = correlation_.GetAxes();
