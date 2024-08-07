@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <memory>
 #include <numeric>
 
 class Fitter{
@@ -41,6 +42,7 @@ public:
     for( const auto& proj : projections ){
       auto sample_graphs = GetSampleGraphs(proj);
       auto fit_param_samples = FitSamples( sample_graphs, functions.at(bin) );
+      graphs_.emplace_back( std::move(sample_graphs) );
       for( auto i=size_t{}; i<n_param; ++i ){
         fit_parameters.at(i).push_back(fit_param_samples.at(i) );
       }
@@ -56,6 +58,13 @@ public:
     return fit_results_;
   }
 
+  auto DumpGraphs( const std::string& file_name ) -> void {
+    auto file = new TFile( file_name.c_str(), "RECREATE" );
+    file->cd();
+    std::for_each( graphs_.begin(), graphs_.end(), []( auto g ){ g->Write(); } );
+    file->Close();
+  }
+
 private:
   auto GetProjections( const Qn::AxisD& slice_axis ) -> std::vector<Qn::DataContainerStatCalculate>;
 
@@ -69,6 +78,7 @@ private:
   std::string slice_axis_name_{};
   Qn::DataContainerStatCalculate correlation_;
   std::vector<Qn::DataContainerStatCalculate> fit_results_{};
+  std::vector<std::unique_ptr<TGraphErrors>> graphs_{};
 };
 
 #endif // FLOW_CALCULATOR_SRC_FITTER_HPP_
