@@ -13,19 +13,23 @@ include_directories( ${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS} ${QnTools_INCLUDE_
 set(HEADERS
         src/correlation.h
         src/functions.h
+        src/fitter.h
         )
 set(SOURCES
         src/correlation.cc
         src/functions.cc
+        src/fitter.cc
         )
 
 ROOT_GENERATE_DICTIONARY( G__Calculator ${HEADERS} LINKDEF src/CalculatorLinkDef.h)
 add_library(Calculator SHARED ${SOURCES} G__Calculator.cxx )
 target_link_libraries(Calculator PUBLIC QnTools::Base ROOT::Tree ROOT::RIO ROOT::MathMore)
-
+target_compile_options(Calculator PUBLIC -Wall -Wextra -Wpedantic)
 
 add_executable(calculate src/main.cpp)
 target_link_libraries(calculate PRIVATE Calculator QnTools::Base ROOT::Tree ROOT::RIO ROOT::MathMore )
+
+configure_file(docs/Doxyfile.in ${CMAKE_SOURCE_DIR}/docs/Doxyfile @ONLY)
 #
 #
 #add_library( Calculator INTERFACE )

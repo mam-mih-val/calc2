@@ -18,6 +18,8 @@
 #pragma link C++ class Correlation<4>+;
 
 #pragma link C++ class Functions+;
+#pragma link C++ class Fitter+;
+
 #pragma link C++ class FunctionsNE+;
 
 #endif

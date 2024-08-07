@@ -7,7 +7,11 @@
 
 #include <TObject.h>
 #include <TFile.h>
+#include <cmath>
+#include <cstddef>
+#include <limits>
 #include "correlation.h"
+#include "Math/SpecFuncMathMore.h"
 
 /// @brief Class containig the static methods to perform higher-level mathematical operations with Correlation<N>
 class Functions {
@@ -94,11 +98,60 @@ public:
       }
     }
     return result_vector;
-  };
-//  static Correlation ExtrapolateToFullEvent(const Correlation& half_event_resolution, double order);
+  }
+  /// @brief Function extrapolating the nth order resolution to m-order resolution
+  /// @param Rn is the correlation containing the resolution correction function
+  /// @param n is the order of provided resolution
+  /// @param m is the order the resolution should be extrapolated to
+  template<size_t N>
+  static Correlation<N> Extrapolate( const Correlation<N>& Rn, size_t n, size_t m ){
+    auto result = Rn;
+    for( int i=0; i<N; ++i ){
+      auto& res = result[i];
+      for( int ii=0; ii<res.size(); ++ii ){
+        auto mean = res.At(ii).Mean();
+        if( std::isnan(mean) )
+          continue;
+        if( std::isinf(mean) )
+          continue;
+        auto chi = DichotomyChiFinder(mean, n);
+        auto extrap = ResolutionFunction( chi, m );
+        auto ratio = extrap / mean;
+        res.At(ii) = res.At(ii)*ratio;
+      }
+    }
+    return result;
+  }
+
 private:
-//  static double ResolutionFunction( double chi, double k, double y );
-//  static double DichotomyResolutionSolver( double res, double order, std::vector<double> range = {0., 10.} );
+  static double DichotomyChiFinder( double value, double k, std::array<double, 2> range = {-10, 15} ){
+    auto [a, b] = range;
+      std::cout << "value: " << value << "\n";
+
+    while( fabs(a - b) > 1e-6 ){
+      auto c = (a+b)/2;
+      auto res_a = ResolutionFunction(a, k) - value;
+      auto res_b = ResolutionFunction(b, k) - value;
+      auto res_c = ResolutionFunction(c, k) - value;
+      if( res_a * res_c < 0 ){
+        b = c;
+        continue;
+      }
+      if( res_b * res_c < 0 ){
+        a = c;
+        continue;
+      }
+    }
+    return (a+b)/2;
+  }
+  static double ResolutionFunction(double chi, double k) {
+    auto chi2_over_2 = chi*chi / 2;
+    auto f1 = sqrt( M_PI ) / 2 * chi * exp( -chi2_over_2 );
+    auto f2 = ROOT::Math::cyl_bessel_i((k-1)/2, chi2_over_2);
+    auto f3 = ROOT::Math::cyl_bessel_i((k+1)/2, chi2_over_2);
+    auto f = f1*(f2+f3);
+    return f;
+  };
 };
 
 /// @brief Same as Functions but does not handle errors thrown while calculation.
@@ -166,7 +219,7 @@ public:
       }
     }
     return result_vector;
-  };
+  }
   
   template<size_t N>
   static std::optional< Correlation<N> > CreateCorrelation( 
