@@ -59,6 +59,9 @@ auto Fitter::GetProjections( const Qn::AxisD& slice_axis ) -> std::vector<Qn::Da
       stat.SetSampleMeans( par_samples.at(bin) );
       stat.SetSampleWeights( reference.At(bin).GetSampleWeights() );
       stat.SetMean( statistics.Mean() );
+      stat.SetVariance(statistics.Variance());
+      stat.SetSumWeights(statistics.SumWeights());
+      stat.SetSumWeights2(statistics.SumWeights2());
       bin++;
     }
     return container;
