@@ -13,7 +13,9 @@
 #include <numeric>
 
 class Fitter{
+public:
   Fitter( Correlation<1> corr, std::string fit_axis, std::string slice_axis ) : fit_axis_name_{ std::move(fit_axis) }, slice_axis_name_{ std::move(slice_axis) }, correlation_{corr[0]} {}
+  
   Fitter(Qn::DataContainerStatCalculate corr, std::string fit_axis, std::string slice_axis) : fit_axis_name_{ std::move(fit_axis) }, slice_axis_name_{ std::move(slice_axis) }, correlation_{corr} {
     assert( correlation_.GetDimension() == 2 );
     auto axes = correlation_.GetAxes();
