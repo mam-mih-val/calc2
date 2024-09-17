@@ -46,6 +46,11 @@ public:
     std::for_each( functions.begin(), functions.end(), [n_param]( auto p ){ assert(p); assert( static_cast<size_t>(p->GetNpar()) == n_param); } );
     auto slice_axis = correlation_.GetAxis(slice_axis_name_);
     auto projections = GetProjections( slice_axis );
+    if( functions.size() == 1 ){
+      auto front = functions.front();
+      functions.resize( projections.size() );
+      std::for_each( functions.begin(), functions.end(), [front]( auto& p ){ p = front; } );
+    }
     fit_parameters_ = FitProjections(projections, functions);
 
     auto reference = correlation_.Projection( std::vector<std::string>{slice_axis_name_} );
