@@ -13,6 +13,15 @@
 #include <memory>
 #include <numeric>
 
+struct BinFit{
+  std::vector<double> main_sample_params;
+  std::vector<std::vector<double>> subsamples_params;
+};
+
+struct FitResult{
+  std::vector<BinFit> results;
+};
+
 class Fitter{
 public:
   Fitter( Correlation<1> corr, std::string fit_axis, std::string slice_axis ) : fit_axis_name_{ std::move(fit_axis) }, slice_axis_name_{ std::move(slice_axis) }, correlation_{corr[0]} {
@@ -37,21 +46,11 @@ public:
     std::for_each( functions.begin(), functions.end(), [n_param]( auto p ){ assert(p); assert( static_cast<size_t>(p->GetNpar()) == n_param); } );
     auto slice_axis = correlation_.GetAxis(slice_axis_name_);
     auto projections = GetProjections( slice_axis );
-    auto fit_parameters = std::vector< std::vector< std::vector<double> > >(n_param);
-    auto bin = size_t{};
-    for( const auto& proj : projections ){
-      auto sample_graphs = GetSampleGraphs(proj);
-      auto fit_param_samples = FitSamples( sample_graphs, functions.at(bin) );
-      std::for_each( sample_graphs.begin(), sample_graphs.end(), [this]( auto& g ){ graphs_.emplace_back( std::move(g) ); } );
-      for( auto i=size_t{}; i<n_param; ++i ){
-        fit_parameters.at(i).push_back(fit_param_samples.at(i) );
-      }
-    }
+    fit_parameters_ = FitProjections(projections, functions);
 
     auto reference = correlation_.Projection( std::vector<std::string>{slice_axis_name_} );
-    for( auto i=size_t{}; i<n_param; ++i ){
-      fit_results_.emplace_back( FillDataContainer(reference, fit_parameters.at(i)) );
-    }
+    
+    fit_results_ = FillDataContainer( reference , fit_parameters_);
   }
 
   auto GetFitResults() -> const std::vector<Qn::DataContainerStatCalculate>& {
@@ -71,13 +70,20 @@ private:
   auto GetSampleGraphs( const Qn::DataContainerStatCalculate& one_dim_correlation ) -> std::vector< std::unique_ptr<TGraphErrors> >;
   
   auto FitSamples( const std::vector< std::unique_ptr<TGraphErrors> >& graphs, TF1* function ) -> std::vector< std::vector<double> >;
+  
+  auto FitMainSample( const std::unique_ptr<TGraph>& main_sample, TF1* function ) -> std::vector<double>;
 
-  auto FillDataContainer( const Qn::DataContainerStatCalculate& reference, const std::vector<std::vector<double>>& par_samples ) -> Qn::DataContainerStatCalculate;
+  auto FillDataContainer( const Qn::DataContainerStatCalculate& reference, FitResult fit_parameters ) -> std::vector<Qn::DataContainerStatCalculate>;
+
+  auto FitBin( Qn::DataContainerStatCalculate& bin, TF1* function ) -> BinFit;
+
+  auto FitProjections( std::vector<Qn::DataContainerStatCalculate> projections, std::vector<TF1*> functions ) -> FitResult;
 
   std::string fit_axis_name_{};
   std::string slice_axis_name_{};
   Qn::DataContainerStatCalculate correlation_;
   std::vector<Qn::DataContainerStatCalculate> fit_results_{};
+  FitResult fit_parameters_{};
   std::vector<std::unique_ptr<TGraphErrors>> graphs_{};
 };
 
