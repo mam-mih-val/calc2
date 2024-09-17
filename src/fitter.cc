@@ -87,21 +87,24 @@ auto Fitter::FillDataContainer( const Qn::DataContainerStatCalculate& reference,
   assert(reference.GetDimension() == 1);
   auto axes = reference.GetAxes();
   auto result = std::vector<Qn::DataContainerStatCalculate>( fit_parameters.results.front().main_sample_params.size(), Qn::DataContainerStatCalculate{ axes } );
-  for( auto i = size_t{}; i<result.size(); ++i ){
-    auto bin_result = fit_parameters.results.at(i);
-    auto weights = reference.At(i).GetSampleWeights();
+  auto n_par = fit_parameters.results.front().main_sample_params.size();
+  auto n_bins = fit_parameters.results.size();
+  for( auto bin = size_t{}; bin<n_bins; ++bin ){
+    auto bin_result = fit_parameters.results.at(bin);
+    auto weights = reference.At(bin).GetSampleWeights();
     for( auto par = size_t{}; par < bin_result.main_sample_params.size(); ++par ){
-      result.at(par).At(i).SetMean( bin_result.main_sample_params.at(par) );
-      result.at(par).At(i).SetSampleMeans( bin_result.subsamples_params.at(par) );
-      result.at(par).At(i).SetSampleWeights( std::vector<double>( bin_result.subsamples_params.at(par).size(), 1.0 ) );
+      result.at(par).At(bin).SetMean( bin_result.main_sample_params.at(par) );
+      result.at(par).At(bin).SetSampleMeans( bin_result.subsamples_params.at(par) );
+      result.at(par).At(bin).SetSampleWeights( std::vector<double>( bin_result.subsamples_params.at(par).size(), 1.0 ) );
       auto statistics = Qn::Statistics{};
       for( size_t j=0; j < bin_result.subsamples_params.at(par).size(); ++j ){
         statistics.Fill(bin_result.subsamples_params.at(par).at(j), weights.at(i));
       }
-      result.at(par).At(i).SetVariance(statistics.Variance());
-      result.at(par).At(i).SetSumWeights(statistics.SumWeights());
-      result.at(par).At(i).SetSumWeights2(statistics.SumWeights2());
+      result.at(par).At(bin).SetVariance(statistics.Variance());
+      result.at(par).At(bin).SetSumWeights(statistics.SumWeights());
+      result.at(par).At(bin).SetSumWeights2(statistics.SumWeights2());
     }
   }
+  
   return result;
 }
