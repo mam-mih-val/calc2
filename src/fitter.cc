@@ -98,7 +98,7 @@ auto Fitter::FillDataContainer( const Qn::DataContainerStatCalculate& reference,
       result.at(par).At(bin).SetSampleWeights( std::vector<double>( bin_result.subsamples_params.at(par).size(), 1.0 ) );
       auto statistics = Qn::Statistics{};
       for( size_t j=0; j < bin_result.subsamples_params.at(par).size(); ++j ){
-        statistics.Fill(bin_result.subsamples_params.at(par).at(j), weights.at(i));
+        statistics.Fill(bin_result.subsamples_params.at(par).at(j), weights.at(bin));
       }
       result.at(par).At(bin).SetVariance(statistics.Variance());
       result.at(par).At(bin).SetSumWeights(statistics.SumWeights());
