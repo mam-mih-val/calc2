@@ -77,6 +77,7 @@ public:
         subsample_graphs_.at(bin).at(sample)->Write( subsample_name.c_str() );
       }
     }
+    file->Close();
   }
 
 private:
