@@ -65,8 +65,18 @@ public:
   auto DumpGraphs( const std::string& file_name ) -> void {
     auto file = new TFile( file_name.c_str(), "RECREATE" );
     file->cd();
-    std::for_each( graphs_.begin(), graphs_.end(), []( auto& g ){ g->Write(); } );
-    file->Close();
+    for( auto bin=size_t{}; bin < main_sample_graphs_.size(); ++bin ){
+      file->cd();
+      auto dir_name = std::string( "bin_" ).append( std::to_string(bin) );
+      auto main_sample_name = dir_name + "_main";
+      file->mkdir( dir_name.c_str() );
+      file->cd( dir_name.c_str() );
+      main_sample_graphs_.at(bin)->Write( main_sample_name.c_str() );
+      for( auto sample=size_t{}; sample < subsample_graphs_.at(bin).size(); ++sample ){
+        auto subsample_name = dir_name + "_" + std::to_string( sample );
+        subsample_graphs_.at(bin).at(sample)->Write( subsample_name.c_str() );
+      }
+    }
   }
 
 private:
@@ -76,7 +86,7 @@ private:
   
   auto FitSamples( const std::vector< std::unique_ptr<TGraphErrors> >& graphs, TF1* function ) -> std::vector< std::vector<double> >;
   
-  auto FitMainSample( const std::unique_ptr<TGraph>& main_sample, TF1* function ) -> std::vector<double>;
+  auto FitMainSample( const std::unique_ptr<TGraphErrors>& main_sample, TF1* function ) -> std::vector<double>;
 
   auto FillDataContainer( const Qn::DataContainerStatCalculate& reference, FitResult fit_parameters ) -> std::vector<Qn::DataContainerStatCalculate>;
 
@@ -89,7 +99,8 @@ private:
   Qn::DataContainerStatCalculate correlation_;
   std::vector<Qn::DataContainerStatCalculate> fit_results_{};
   FitResult fit_parameters_{};
-  std::vector<std::unique_ptr<TGraphErrors>> graphs_{};
+  std::vector<std::unique_ptr<TGraphErrors>> main_sample_graphs_{};
+  std::vector<std::vector<std::unique_ptr<TGraphErrors>>> subsample_graphs_{};
 };
 
 #endif // FLOW_CALCULATOR_SRC_FITTER_HPP_

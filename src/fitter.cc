@@ -7,17 +7,19 @@
 auto Fitter::FitBin( Qn::DataContainerStatCalculate& bin, TF1* function ) -> BinFit{
   assert(function);
   assert( bin.GetDimension() == 1 );
-  auto main_sample_graph = std::unique_ptr<TGraph>( Qn::ToTGraph(bin) );
+  auto main_sample_graph = std::unique_ptr<TGraphErrors>( Qn::ToTGraph(bin) );
   auto sample_graphs = GetSampleGraphs( bin );
   auto main_sample_parameters = FitMainSample(main_sample_graph, function);
   auto samples_parameters = FitSamples(sample_graphs, function);
   auto bin_result = BinFit{};
   bin_result.main_sample_params = std::move(main_sample_parameters);
   bin_result.subsamples_params = std::move(samples_parameters);
+  main_sample_graphs_.emplace_back( std::move(main_sample_graph) );
+  subsample_graphs_.emplace_back( std::move(sample_graphs) );
   return bin_result;
 }
 
-auto Fitter::FitMainSample( const std::unique_ptr<TGraph>& main_sample, TF1* function ) -> std::vector<double> {
+auto Fitter::FitMainSample( const std::unique_ptr<TGraphErrors>& main_sample, TF1* function ) -> std::vector<double> {
   assert(function);
   auto n_par = static_cast<size_t>(function->GetNpar());
   auto result = std::vector<double>( n_par );
@@ -54,7 +56,7 @@ auto Fitter::GetProjections( const Qn::AxisD& slice_axis ) -> std::vector<Qn::Da
   return result;
 }
 
-  auto Fitter::GetSampleGraphs( const Qn::DataContainerStatCalculate& one_dim_correlation ) -> std::vector< std::unique_ptr<TGraphErrors> > {
+auto Fitter::GetSampleGraphs( const Qn::DataContainerStatCalculate& one_dim_correlation ) -> std::vector< std::unique_ptr<TGraphErrors> > {
   assert( one_dim_correlation.GetDimension() == 1 );
   auto n_samples = one_dim_correlation.At(0).GetSampleMeans().size();
   auto result = std::vector< std::unique_ptr<TGraphErrors> >( n_samples );
@@ -87,7 +89,6 @@ auto Fitter::FillDataContainer( const Qn::DataContainerStatCalculate& reference,
   assert(reference.GetDimension() == 1);
   auto axes = reference.GetAxes();
   auto result = std::vector<Qn::DataContainerStatCalculate>( fit_parameters.results.front().main_sample_params.size(), Qn::DataContainerStatCalculate{ axes } );
-  auto n_par = fit_parameters.results.front().main_sample_params.size();
   auto n_bins = fit_parameters.results.size();
   for( auto bin = size_t{}; bin<n_bins; ++bin ){
     auto bin_result = fit_parameters.results.at(bin);
