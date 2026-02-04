@@ -16,6 +16,12 @@
 #pragma link C++ class Correlation<2>+;
 #pragma link C++ class Correlation<3>+;
 #pragma link C++ class Correlation<4>+;
+#pragma link C++ class Correlation<5>+;
+#pragma link C++ class Correlation<6>+;
+#pragma link C++ class Correlation<7>+;
+#pragma link C++ class Correlation<8>+;
+#pragma link C++ class Correlation<9>+;
+#pragma link C++ class Correlation<10>+;
 
 #pragma link C++ class Functions+;
 #pragma link C++ class Fitter+;

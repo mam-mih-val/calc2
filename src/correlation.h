@@ -11,8 +11,10 @@
 #include <string>
 #include <numeric>
 #include <utility>
+#include <memory>
 
 #include <TFile.h>
+#include <TList.h>
 
 #include <DataContainer.hpp>
 
@@ -151,6 +153,11 @@ public:
   ~Correlation() = default;
   [[nodiscard]] const std::string& Title() const { return title_; }
   void SetTitle( const std::string& title ){ title_ = title; }
+  template<typename T>
+  void Perform( const T& function ){
+    for(auto& comp : components_)
+      function( comp );
+  }
   /// @brief Rebins all the containing correlations along the provided axes 
   void Rebin( const std::vector<Qn::AxisD>& rebin_axes ){
     std::for_each( components_.begin(), components_.end(), [&rebin_axes]( auto& component ){
@@ -183,10 +190,42 @@ public:
     return result;
   }
 
+  friend Correlation<N> operator+(const Correlation<N>& lhs, double num) noexcept {
+    auto result = Correlation(lhs);
+    for( size_t i=0; i<N; ++i ){
+      for( auto& bin : result[i] ){
+        auto mean = bin.Mean();
+        auto sample_means = bin.GetSampleMeans();
+        mean += num;
+        for( auto& s_m : sample_means )
+          s_m+=num;
+        bin.SetMean( mean );
+        bin.SetSampleMeans( sample_means );
+      }
+    }
+    return result;
+  }
+
   friend Correlation<N> operator-(const Correlation<N>& lhs, const Correlation<N> & rhs) noexcept {
     auto result = Correlation(lhs);
     for( size_t i=0; i<N; ++i ){
       result.components_[i] = lhs.components_[i] - rhs.components_[i];
+    }
+    return result;
+  }
+
+  friend Correlation<N> operator-(const Correlation<N>& lhs, double num) noexcept {
+    auto result = Correlation(lhs);
+    for( size_t i=0; i<N; ++i ){
+      for( auto& bin : result ){
+        auto mean = bin.Mean();
+        auto sample_means = bin.GetSampleMeans();
+        mean -= num;
+        for( auto& s_m : sample_means )
+          s_m-=num;
+        bin.SetMean( mean );
+        bin.SetSampleMeans( sample_means );
+      }
     }
     return result;
   }
@@ -251,12 +290,29 @@ public:
     }
     return result;
   }
+  friend Correlation<N> Pow(const Correlation<N>& lhs, double power) noexcept {
+    auto result = Correlation(lhs);
+    for( size_t i=0; i<N; ++i ){
+      result.components_[i] = Pow( lhs.components_[i], power );
+    }
+    return result;
+  }
   /// @brief Factory returning the std::optional<Correlation<M>>. Use to avoid handling the exceptions
   template<size_t M>
   friend std::optional< Correlation<M> > MakeCorrelation( TFile* file, 
                                                           const std::string& directory, 
                                                           const std::array<std::string, 2>& vector_names, 
                                                           const std::array<std::string, M>& component_names ) noexcept;
+
+  friend Correlation<N> Merge( Correlation<N> first, Correlation<N> second ){
+    auto result = first;
+    for( auto i = size_t{}; i< N; ++i ){
+      auto list = std::make_unique<TList>();
+      list->Add( *second.components_.at(i) );
+      result.components_.at(i)->Merge( list );
+    }
+    return result;
+  }
   
 private:
   std::string title_;
